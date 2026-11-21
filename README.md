@@ -27,7 +27,15 @@ stonks/
 ├── DOCS/
 │   ├── CONTEXTS.md      # Domain context, design rationale, and glossary
 │   └── SPEC.md          # Detailed technical specification
+├── config.py            # Central default parameters (windows, thresholds, capital)
 ├── fetcher.py           # Daily stock price fetcher (yfinance)
+├── trend.py             # Trend / Momentum signal (EMA crossover + RSI/ROC)
+├── pairs.py             # Pairs trading signal (Engle-Granger + spread Z-score)
+├── regime.py            # Volatility & regime filter, regime weights
+├── montecarlo.py        # GBM Monte Carlo risk (VaR, max drawdown) & sizing
+├── pipeline.py          # Score aggregation, dead-zone, daily decisions
+├── simulator.py         # Paper-trading portfolio & P&L tracking
+├── main.py              # Daily entry point
 ├── requirements.txt     # Python dependencies
 ├── README.md
 └── stonkenv/            # Local Python virtual environment
