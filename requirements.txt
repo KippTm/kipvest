@@ -1,0 +1,14 @@
+# Market data ingestion (daily open/close & benchmark prices)
+yfinance
+
+# Time-series analysis & technical indicators (EMA, RSI/ROC, ATR, rolling windows)
+pandas
+
+# Numerical computing & Monte Carlo (GBM) simulations
+numpy
+
+# Statistical functions & tail-risk / VaR calculations
+scipy
+
+# Cointegration testing (Engle-Granger) & regression for pairs trading
+statsmodels

@@ -1,0 +1,44 @@
+# Virtual environments
+stonkenv/
+.venv/
+venv/
+env/
+ENV/
+
+# Python bytecode & caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Testing & linting caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Environment variables & secrets
+.env
+.env.*
+
+# Logs & local caches
+*.log
+.cache/
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+
+# Editor / IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
