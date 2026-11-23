@@ -17,6 +17,7 @@ of all trading days, so a ticker has NaN on days its exchange was closed.
 import logging
 import time
 from collections.abc import Iterable
+from pathlib import Path
 
 import pandas as pd
 import yfinance as yf
@@ -27,6 +28,7 @@ PRICE_FIELDS = ("Open", "High", "Low", "Close", "Volume")
 DEFAULT_PERIOD = "1y"
 DEFAULT_BATCH_SIZE = 50
 DEFAULT_PAUSE_SECONDS = 1.0
+DEFAULT_PRICES_PATH = Path("data/prices.csv")
 
 TickerInput = str | Iterable[str]
 
@@ -191,6 +193,81 @@ def get_closing_prices(source: pd.DataFrame | TickerInput, **download_kwargs) ->
     ``get_price_field``.
     """
     return get_price_field("Close", source, **download_kwargs)
+
+
+def to_long(prices: pd.DataFrame) -> pd.DataFrame:
+    """Convert a wide ``(Field, Ticker)`` DataFrame to long format.
+
+    Returns one row per ``(Date, Ticker)`` with columns
+    ``["Date", "Ticker", *fields]``, dropping rows where all price fields
+    are missing.
+    """
+    if not isinstance(prices.columns, pd.MultiIndex) or prices.columns.nlevels != 2:
+        raise ValueError("Expected a wide DataFrame with (Field, Ticker) MultiIndex columns.")
+
+    stacked = prices.stack(level=1).dropna(how="all")
+    stacked.index.names = ["Date", "Ticker"]
+    long_df = stacked.reset_index()
+    long_df["Date"] = pd.to_datetime(long_df["Date"]).dt.normalize()
+
+    ordered_fields = [f for f in PRICE_FIELDS if f in long_df.columns]
+    extra_fields = [c for c in long_df.columns if c not in ("Date", "Ticker", *ordered_fields)]
+    return long_df[["Date", "Ticker", *ordered_fields, *extra_fields]]
+
+
+def to_wide(long_df: pd.DataFrame) -> pd.DataFrame:
+    """Pivot a long ``(Date, Ticker, ...)`` DataFrame back to ``(Field, Ticker)``."""
+    required = {"Date", "Ticker"}
+    if not required.issubset(long_df.columns):
+        raise ValueError("Expected columns 'Date' and 'Ticker' in long_df.")
+
+    df = long_df.copy()
+    df["Date"] = pd.to_datetime(df["Date"])
+    value_cols = [f for f in PRICE_FIELDS if f in df.columns]
+    if not value_cols:
+        value_cols = [c for c in df.columns if c not in ("Date", "Ticker")]
+
+    wide = df.pivot(index="Date", columns="Ticker", values=value_cols).sort_index()
+    wide.columns.names = ["Field", "Ticker"]
+    return wide
+
+
+def save_prices(prices: pd.DataFrame, path: str | Path = DEFAULT_PRICES_PATH) -> Path:
+    """Save or incrementally append ``prices`` to a long-format CSV file.
+
+    Accepts either a wide ``batch_download`` DataFrame or an already-long
+    DataFrame. Existing ``(Date, Ticker)`` rows are updated in place so
+    re-running on the same day never creates duplicates.
+    """
+    target = Path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+
+    incoming = to_long(prices) if isinstance(prices.columns, pd.MultiIndex) else prices.copy()
+    incoming["Date"] = pd.to_datetime(incoming["Date"]).dt.normalize()
+
+    if target.exists():
+        existing = pd.read_csv(target, parse_dates=["Date"])
+        combined = pd.concat([existing, incoming], ignore_index=True)
+    else:
+        combined = incoming
+
+    combined = (
+        combined.drop_duplicates(subset=["Date", "Ticker"], keep="last")
+        .sort_values(["Date", "Ticker"])
+        .reset_index(drop=True)
+    )
+    combined.to_csv(target, index=False, date_format="%Y-%m-%d")
+    return target
+
+
+def load_prices(path: str | Path = DEFAULT_PRICES_PATH, wide: bool = True) -> pd.DataFrame:
+    """Load saved prices from a long-format CSV file.
+
+    Returns a wide ``(Field, Ticker)`` DataFrame by default (matching
+    ``batch_download``), or the raw long DataFrame when ``wide=False``.
+    """
+    df = pd.read_csv(path, parse_dates=["Date"])
+    return to_wide(df) if wide else df
 
 
 if __name__ == "__main__":

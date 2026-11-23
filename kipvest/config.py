@@ -5,7 +5,24 @@ strategies can be tuned in one place.
 """
 
 # --- Data ingestion (SPEC §2) ---------------------------------------------
-TRACKED_TICKERS: list[str] = []  # e.g. ["AAPL", "MSFT", "NOVO-B.CO"]
+TRACKED_TICKERS: list[str] = [
+    # US Tech & Semis
+    "AAPL", "MSFT", "GOOGL", "META", "NVDA", "AMD", "AVGO", "QCOM",
+    # US Financials & Payments
+    "JPM", "BAC", "GS", "MS", "V", "MA",
+    # US Energy & Industrials
+    "XOM", "CVX", "COP", "CAT", "DE", "UPS", "FDX",
+    # US Healthcare & Staples
+    "JNJ", "PFE", "MRK", "ABBV", "KO", "PEP", "WMT", "COST", "HD", "LOW",
+    # US Telecom & Autos
+    "VZ", "T", "F", "GM",
+    # Copenhagen (.CO)
+    "NOVO-B.CO", "GMAB.CO", "COLO-B.CO", "DEMANT.CO",
+    "MAERSK-B.CO", "DSV.CO", "ORSTED.CO", "VWS.CO",
+    "DANSKE.CO", "TRYG.CO", "CARL-B.CO", "RBREW.CO", "PNDORA.CO",
+    # ETFs
+    "SPY", "QQQ",
+]
 BENCHMARKS = {
     "sp500": "^GSPC",
     "omxc25": "^OMXC25",
